@@ -1,10 +1,6 @@
-"""
-NOTE: before using install xgboost in latest version, currently 1.5.1
-      > !pip install xgboost==1.5.1
-"""
-
+import pkg_resources
 from typing import List, Dict
-from dataclasses import dataclass, asdict
+from dataclasses import asdict
 
 import requests
 import pandas as pd
@@ -13,25 +9,7 @@ import numpy as np
 from time import sleep
 from xgboost import XGBClassifier
 
-
-@dataclass
-class PalindromesApiResponse:
-    """
-    Palindrome api response used for serializing 
-    into dataframe format
-    """
-    original_index: int
-    after: str
-    before: str
-    mismatches: int
-    opposite: str
-    position: int
-    sequence: str
-    signature: str
-    spacer: str
-    sequence: int
-    stability_NNModel: Dict[str, int]
-
+from palindrome_tree.models import PalindromesApiResponse, PalindromeTreeResult
 
 class PalindromeTree():
     """
@@ -41,7 +19,6 @@ class PalindromeTree():
 
     _FIXED_WINDOW_SIZE: int = 30
     _ENCODING: Dict[str, float] = {'A': 0.25, 'C': 0.5, 'G': 0.75, 'T': 1}
-    _RESULT_COLUMNS: List[str] = ["position", "sequence"]
     _API_ENDPOINT: str = "http://palindromes.ibp.cz/rest/analyze/palindrome"
 
     def _sequence_convertor(self, *, sequence: str) -> np.array:
@@ -62,14 +39,19 @@ class PalindromeTree():
             converted_sequences.append(converted)
         return np.array(converted_sequences)
 
-    def _init_tree(self, *, model_path: str) -> XGBClassifier:
+    def _init_tree(self) -> XGBClassifier:
         """
         Create model instance and load parameters from json model file
         :param model_path: path to file with model params in json
         :return: instance of gradient boosted tree
         """
         xgb = XGBClassifier()
-        xgb.load_model(model_path)
+        xgb.load_model(
+            pkg_resources.resource_filename(
+                __name__,
+                '/model/palindrome-xgboost-tree.json'
+                ) 
+        )
         return xgb
 
     def _predict(self, *, model: XGBClassifier, converted_sequences: np.array) -> List[int]:
@@ -99,12 +81,15 @@ class PalindromeTree():
 
         for position in predicted_position: 
             data.append(
-                {
-                    "position": position,
-                    "sequence": sequence[position:position+self._FIXED_WINDOW_SIZE]
-                 }
+                PalindromeTreeResult(
+                    position=position,
+                    sequence=sequence[position:position+self._FIXED_WINDOW_SIZE],
+                )
             )
-        return pd.DataFrame(data, columns=self._RESULT_COLUMNS)
+        return pd.DataFrame(
+                data=data,
+                columns=asdict(data[0]).keys()
+        )
 
     def _validate_with_api(self, predicted_position: List[int], sequence: str) -> pd.DataFrame:
         """
@@ -149,15 +134,14 @@ class PalindromeTree():
                 columns=asdict(validation_collector[0]).keys()
             )
 
-    def analyse(self, sequence: str, model_path: str, check_with_api: bool = False) -> pd.DataFrame:
+    def analyse(self, sequence: str, check_with_api: bool = False) -> pd.DataFrame:
         """
         Analyse sequence for possible palindromes
         :param sequence:
-        :param model_path:
         :param check_with_api:
         :return:
         """
-        model = self._init_tree(model_path=model_path)
+        model = self._init_tree()
         converted_sequences = self._sequence_convertor(sequence=sequence)
         predicted_position = self._predict(model=model, converted_sequences=converted_sequences)
 
@@ -171,14 +155,3 @@ class PalindromeTree():
                     sequence=sequence,
                     predicted_position=predicted_position
                 )
-
-if __name__ == '__main__':
-    sequence_file = open("./sequences/NC_001357.1 Human papillomavirus.txt", "r")
-
-    results = PalindromeTree().analyse(
-        sequence=sequence_file.read(),
-        model_path="./model/palindrome-xgboost-tree.json",
-        check_with_api=True,
-    )
-
-    print(results)

@@ -8,11 +8,65 @@ Palindrome tree was built with Python 3.7+.
 
 ## Installation
 
-Description of installation
+To install palindrome tree use [Pypi](https://pypi.org/project/palindrome-tree/) repository.
+
+```commandline
+pip install palindrome-tree
+```
 
 ## Usage
 
-Description of usage
+User has to initialize palindrome tree analyzer instance which is imported from main package `palindrome_tree`.
+
+```python
+from palindrome_tree import PalindromeTree
+
+tree = PalindromeTree()
+```
+
+### Predict regions (without API validation)
+
+To predict regions with possible palindromes, run analyse without setting `check_with_api` paramether. 
+
+```python
+sequence_file = open("/path/to/sequence/name.txt", "r")
+
+results = tree.analyse(
+    sequence=sequence_file.read(),
+    check_with_api=False,
+)
+```
+The results are then stored in results variable as `pd.DataFrame`. 
+
+|    |   position | sequence                       |
+|---:|-----------:|:-------------------------------|
+|  0 |          8 | TTTGTAGAGACAGGGTCTTGCTGTGTTTCC |
+|  1 |         10 | TGTAGAGACAGGGTCTTGCTGTGTTTCCCA |
+|  2 |         49 | CGAACTCCTGGCCTCTAGGCAATCCTCCCA |
+|  3 |        102 | ATCCCACTCTTTTTTGAAAAATAAAATCTA |
+|  4 |        105 | CCACTCTTTTTTGAAAAATAAAATCTACCA |
+
+### Predict regions (with API validation)
+
+To predict regions with possible palindromes and afterward validation, run analyse with `check_with_api` paramether set. 
+
+```python
+sequence_file = open("/path/to/sequence/name.txt", "r")
+
+results = tree.analyse(
+    sequence=sequence_file.read(),
+    check_with_api=True,
+)
+```
+The results are also stored in results variable as `pd.DataFrame`. 
+
+|    |   original_index | after   | before   |   mismatches | opposite   |   position | sequence   | signature   | spacer   | stability_NNModel                                                                |
+|---:|-----------------:|:--------|:---------|-------------:|:-----------|-----------:|:-----------|:------------|:---------|:---------------------------------------------------------------------------------|
+|  0 |                0 | CC      | TTTGT    |            2 | CTGTGTTT   |          5 | AGAGACAG   | 8-7-2       | GGTCTTG  | {'cruciform': -5.74, 'linear': -27.590000000000003, 'delta': 21.85}              |
+|  1 |                0 | TGCTG   | TTTGT    |            2 | GGGTCT     |          5 | AGAGAC     | 6-1-2       | A        | {'cruciform': -2.54, 'linear': -13.84, 'delta': 11.3}                            |
+|  2 |                0 | GTGTT   | TGTAG    |            2 | CTTGCT     |          7 | AGACAG     | 6-3-2       | GGT      | {'cruciform': -1.94, 'linear': -17.509999999999998, 'delta': 15.569999999999999} |
+|  3 |                0 | TTCC    | TAGAG    |            2 | CTGTGT     |          9 | ACAGGG     | 6-5-2       | TCTTG    | {'cruciform': -3.7399999999999998, 'linear': -20.99, 'delta': 17.25}             |
+|  4 |                1 | CCCA    | TGT      |            2 | CTGTGTTT   |          3 | AGAGACAG   | 8-7-2       | GGTCTTG  | {'cruciform': -5.74, 'linear': -27.590000000000003, 'delta': 21.85}              |
 
 ## Dependencies
 
@@ -23,13 +77,9 @@ Description of usage
 
 ## Authors
 
-* **Jaromir Kratochvil** - *Main developer* - [jaromirkratochvil](
-https://github.com/kratjar
-)
+* **Jaromir Kratochvil** - *Main developer* - [jaromirkratochvil](https://github.com/kratjar)
 
-* **Patrik Kaura** - *Developer* - [patrikkaura](
-https://gitlab.com/PatrikKaura/
-)
+* **Patrik Kaura** - *Developer* - [patrikkaura](https://gitlab.com/PatrikKaura/)
 
 * **Jiří Šťastný** - *Supervisor*
 

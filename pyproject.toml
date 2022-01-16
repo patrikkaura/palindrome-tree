@@ -2,7 +2,26 @@
 name = "palindrome-tree"
 version = "1.0.0"
 description = "Gradient boosted decision tree palindrome predictor, used to locate regions for further investigation thru http://palindromes.ibp.cz/"
-authors = ["patrik.kaura <160702@vutbr.cz>", "jaromir.kratochvil <171433@vutbr.cz>"]
+authors = ["jaromir.kratochvil <171433@vutbr.cz>", "patrik.kaura <160702@vutbr.cz>"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/patrikkaura/palindrome-tree"
+keywords = ["DNA", "palindrome"]
+classifiers=[
+        "Intended Audience :: Education",
+        "Intended Audience :: Science/Research",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Topic :: Scientific/Engineering :: Bio-Informatics",
+        "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+packages = [
+    { include = "palindrome_tree" },
+]
 
 [tool.poetry.dependencies]
 python = "^3.7.1"

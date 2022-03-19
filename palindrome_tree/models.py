@@ -1,5 +1,6 @@
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from typing import Dict
+
 
 @dataclass
 class PalindromesApiResponse:
@@ -18,6 +19,7 @@ class PalindromesApiResponse:
     spacer: str
     sequence: int
     stability_NNModel: Dict[str, int]
+
 
 @dataclass
 class PalindromeTreeResult:

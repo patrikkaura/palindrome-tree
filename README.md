@@ -77,9 +77,9 @@ The results are also stored in results variable as `pd.DataFrame`.
 
 ## Authors
 
-* **Jaromir Kratochvil** - *Main developer* - [jaromirkratochvil](https://github.com/kratjar)
+* **Patrik Kaura** - *Main developer* - [patrikkaura](https://gitlab.com/PatrikKaura/)
 
-* **Patrik Kaura** - *Developer* - [patrikkaura](https://gitlab.com/PatrikKaura/)
+* **Jaromir Kratochvil** - *Developer* - [jaromirkratochvil](https://github.com/kratjar)
 
 * **Jiří Šťastný** - *Supervisor*
 

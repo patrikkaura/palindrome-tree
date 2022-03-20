@@ -136,11 +136,11 @@ class PalindromeTree:
         """
         batch = ""
 
-        for index, position in enumerate(predicted_intervals):
+        for i, position in enumerate(predicted_intervals):
             batch += sequence[position[0]:position[1]].upper()
             batch += "\n"
 
-            if (index % self._BATCH_LIMIT) == 0:
+            if (i + 1) % self._VALIDATION_BATCH_SIZE == 0:
                 yield batch
                 batch = ""
         yield batch

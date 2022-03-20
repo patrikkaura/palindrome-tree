@@ -8,7 +8,6 @@ class PalindromesApiResponse:
     Palindrome api response used for serializing 
     into dataframe format
     """
-    original_index: int
     after: str
     before: str
     mismatches: int
@@ -27,5 +26,7 @@ class PalindromeTreeResult:
     Palindrome tree results used for serializing
     into dataframe format
     """
-    position: int
+    start: int
+    end: int
+    length: int
     sequence: str

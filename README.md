@@ -31,10 +31,13 @@ To predict regions with possible palindromes, run analyse without setting `check
 ```python
 sequence_file = open("/path/to/sequence/name.txt", "r")
 
-results = tree.analyse(
+tree = PalindromeTree()
+
+tree.analyse(
     sequence=sequence_file.read(),
-    check_with_api=False,
 )
+
+tree.results
 ```
 The results are then stored in results variable as `pd.DataFrame`. 
 
@@ -53,10 +56,14 @@ To predict regions with possible palindromes and afterward validation, run analy
 ```python
 sequence_file = open("/path/to/sequence/name.txt", "r")
 
-results = tree.analyse(
+tree = PalindromeTree()
+
+tree = tree.analyse(
     sequence=sequence_file.read(),
-    check_with_api=True,
+    validate_with_api=True,
 )
+
+tree.validated_results
 ```
 The results are also stored in results variable as `pd.DataFrame`. 
 

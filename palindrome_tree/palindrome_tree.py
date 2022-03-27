@@ -1,5 +1,5 @@
 import pkg_resources
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 from dataclasses import asdict
 
 import requests
@@ -19,22 +19,51 @@ class PalindromeTree:
 
     _BATCH_LIMIT: int = 1_000_000
     _FIXED_WINDOW_SIZE: int = 30
-    _VALIDATION_BATCH_SIZE: int = 1000
+    _VALIDATION_BATCH_SIZE: int = 100
     _ENCODING: Dict[str, float] = {'A': 0.25, 'C': 0.5, 'G': 0.75, 'T': 1}
     _API_ENDPOINT: str = "http://palindromes.ibp.cz/rest/analyze/palindrome"
 
-    def _sequence_convertor(self, *, sequence: str) -> np.array:
+    def __init__(self):
+        self._predicted_intervals: List[Tuple[int, int]] = []
+        self._sequence: Optional[str] = None
+        self._validation_collector: List['PalindromesApiResponse'] = []
+
+    @property
+    def results(self) -> Optional[pd.DataFrame]:
+        """
+        Return pandas dataframe with results if predicted intervals
+        and sequence is set
+        :return: pd.DataFrame with predicted intervals
+        """
+        if self._predicted_intervals and self._sequence:
+            return self._process_results()
+        return
+
+    @property
+    def validated_results(self) -> Optional[pd.DataFrame]:
+        """
+        Return pandas dataframe with validated palindromes if sequence and
+        validation collector is set
+        :return: pd.DataFrame with validated palindromes
+        """
+        if self._validation_collector and self._sequence:
+            return pd.DataFrame(
+                data=self._validation_collector,
+                columns=asdict(self._validation_collector[0]).keys()
+            )
+        return
+
+    def _sequence_convertor(self) -> np.array:
         """
         Convert sequences with class defined _ENCODING
         NOTE: don't change cause tree is trained to use exactly these parameters
-        :param sequence: input sequence for conversion
         :return: numpy array with converted windows
         """
         converted_sequences = []
 
-        for i in range(0, len(sequence) - self._FIXED_WINDOW_SIZE):
+        for i in range(0, len(self._sequence) - self._FIXED_WINDOW_SIZE):
             converted = []
-            for base in sequence[i:i + self._FIXED_WINDOW_SIZE]:
+            for base in self._sequence[i:i + self._FIXED_WINDOW_SIZE]:
                 converted.append(
                     self._ENCODING.get(base.upper(), 0)
                 )
@@ -76,13 +105,15 @@ class PalindromeTree:
                 results.append(index)
         return results
 
-    def _create_intervals(self, predictions: List[int]) -> List[Tuple[int, int]]:
+    def _create_intervals(self, predictions: List[int], batch_index: int) -> List[Tuple[int, int]]:
         """
         Create intervals used for merging
         :param predictions: predicted positions
+        :param batch_index: index of currently processed batch
         :return: intervals with fixed window size
         """
-        return [(i, i + self._FIXED_WINDOW_SIZE) for i in predictions]
+        offset = batch_index * self._BATCH_LIMIT
+        return [(i + offset, i + offset + self._FIXED_WINDOW_SIZE) for i in predictions]
 
     @staticmethod
     def _merge_results(*, results: List[Tuple[int, int]]) -> List[Tuple[int, int]]:
@@ -101,17 +132,14 @@ class PalindromeTree:
                 results[i] = (results[i][0], result[1])
         return results[:i + 1]
 
-    @staticmethod
-    def _process_results(*, sequence: str, predicted_intervals: List[Tuple[int, int]]) -> pd.DataFrame:
+    def _process_results(self) -> pd.DataFrame:
         """
         Process results and convert them into pandas dataframe
-        :param sequence: original sequence
-        :param predicted_intervals: predicted position with possible palindromes
         :return: results in pandas dataframe table
         """
         data = []
 
-        for position in predicted_intervals:
+        for position in self._predicted_intervals:
             start, end = position
 
             data.append(
@@ -119,7 +147,7 @@ class PalindromeTree:
                     start=start,
                     end=end,
                     length=end - start,
-                    sequence=sequence[start:end],
+                    sequence=self._sequence[start:end],
                 )
             )
         return pd.DataFrame(
@@ -127,17 +155,15 @@ class PalindromeTree:
             columns=asdict(data[0]).keys()
         )
 
-    def sequence_generator(self, predicted_intervals: List[Tuple[int, int]], sequence: str) -> str:
+    def sequence_generator(self) -> str:
         """
         Return batch of sequences for API validation
-        :param predicted_intervals: predicted intervals
-        :param sequence: original sequence
         :return: batch of sequences
         """
         batch = ""
 
-        for i, position in enumerate(predicted_intervals):
-            batch += sequence[position[0]:position[1]].upper()
+        for i, position in enumerate(self._predicted_intervals):
+            batch += self._sequence[position[0]:position[1]].upper()
             batch += "\n"
 
             if (i + 1) % self._VALIDATION_BATCH_SIZE == 0:
@@ -145,18 +171,14 @@ class PalindromeTree:
                 batch = ""
         yield batch
 
-    def _validate_with_api(self, predicted_intervals: List[Tuple[int, int]], sequence: str) -> pd.DataFrame:
+    def _validate_with_api(self) -> None:
         """
         Validate found regions for palindrome existence
-        :param predicted_intervals: predicted position with possible palindromes
-        :param sequence: original sequence
         :return: results from palindrome api in dataframe
         """
-        validation_collector: List['PalindromesApiResponse'] = []
-
         print("STARTING API VALIDATION PROCESS")
 
-        for index, sequence_for_api in enumerate(self.sequence_generator(predicted_intervals, sequence)):
+        for index, sequence_for_api in enumerate(self.sequence_generator()):
             print(f"VALIDATING BATCH NUMBER {index}")
 
             response = requests.post(
@@ -173,45 +195,44 @@ class PalindromeTree:
             if response.ok:
                 data = response.json()
                 for palindrome in data['palindromes']:
-                    validation_collector.append(
+                    self._validation_collector.append(
                         PalindromesApiResponse(**palindrome)
                     )
             else:
                 print(f"VALIDATION OF BATCH NUMBER {index} FAILED")
-
         print("VALIDATION PROCESS FINISHED!")
 
-        return pd.DataFrame(
-            data=validation_collector,
-            columns=asdict(validation_collector[0]).keys()
-        )
-
-    def analyse(self, sequence: str, check_with_api: bool = False) -> pd.DataFrame:
+    def analyse(self, sequence: str, validate_with_api: bool = False) -> None:
         """
         Analyse sequence for possible palindromes
-        :param sequence:
-        :param check_with_api:
+        :param sequence: input sequence in FASTA or txt file
+        :param validate_with_api: boolean flag tells if app should validate with API
         :return:
         """
         model = self._init_tree()
-        predicted_intervals: List[Tuple[int, int]] = []
 
-        for converted_sequences in self._sequence_convertor(sequence=sequence):
-            predictions = self._predict(model=model, converted_sequences=converted_sequences)
-            result_intervals = self._create_intervals(predictions=predictions)
+        self._predicted_intervals = []
+        self._validation_collector = []
+        self._sequence = sequence
 
-            merged_intervals = self._merge_results(results=result_intervals)
-            predicted_intervals.extend(
+        for batch_index, converted_sequences in enumerate(self._sequence_convertor()):
+            predictions = self._predict(
+                model=model, converted_sequences=converted_sequences
+            )
+            result_intervals = self._create_intervals(
+                predictions=predictions, batch_index=batch_index
+            )
+            merged_intervals = self._merge_results(
+                results=result_intervals
+            )
+            self._predicted_intervals.extend(
                 merged_intervals
             )
 
+        self._predicted_intervals = self._merge_results(results=self._predicted_intervals)
+
         print("DECISION TREE ANALYSIS COMPLETED")
-        print(f"FOUND {len(predicted_intervals)} POSSIBLE PALINDROME REGIONS")
+        print(f"FOUND {len(self._predicted_intervals)} POSSIBLE PALINDROME REGIONS")
 
-        if check_with_api:
-            return self._validate_with_api(predicted_intervals=predicted_intervals, sequence=sequence)
-
-        return self._process_results(
-            sequence=sequence,
-            predicted_intervals=predicted_intervals
-        )
+        if validate_with_api:
+            self._validate_with_api()

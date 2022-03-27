@@ -29,6 +29,8 @@ tree = PalindromeTree()
 To predict regions with possible palindromes, run analyse without setting `check_with_api` paramether. 
 
 ```python
+from palindrome_tree import PalindromeTree
+
 sequence_file = open("/path/to/sequence/name.txt", "r")
 
 tree = PalindromeTree()
@@ -54,11 +56,13 @@ The results are then stored in results variable as `pd.DataFrame`.
 To predict regions with possible palindromes and afterward validation, run analyse with `check_with_api` paramether set. 
 
 ```python
+from palindrome_tree import PalindromeTree
+
 sequence_file = open("/path/to/sequence/name.txt", "r")
 
 tree = PalindromeTree()
 
-tree = tree.analyse(
+tree.analyse(
     sequence=sequence_file.read(),
     validate_with_api=True,
 )

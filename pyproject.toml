@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "palindrome-tree"
-version = "1.3.0"
+version = "1.3.1"
 description = "Gradient boosted decision tree palindrome predictor, used to locate regions for further investigation thru http://palindromes.ibp.cz/"
 authors = ["jaromir.kratochvil <171433@vutbr.cz>", "patrik.kaura <160702@vutbr.cz>"]
 license = "MIT"

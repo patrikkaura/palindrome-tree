@@ -1,4 +1,14 @@
-# Palindrome tree
+<h1 align='center'> Palindrome tree</h1>
+<br />
+<div align="center">
+    <a href="https://pypi.org/project/dna-analyser-ibp/">
+    <img src="https://img.shields.io/badge/Version 1.3.1-green?style=for-the-badge" alt='package_version'/>
+    </a>
+    <img src="https://img.shields.io/badge/Python 3.6+-00599C?style=for-the-badge&logo=python&logoColor=white" alt='python_version'/>
+    <img src="https://img.shields.io/badge/jupyter-gray?style=for-the-badge&logo=jupyter" alt='jupyter'/>
+</div>
+<br />
+
 
 Palindrome tree tool is used for analyzing inverted repeats in various DNA sequences using decision trees. This tool takes provided sequences and finds interesting parts in which there's high probability of palindrome occurrence using decision tree. This process filters a big portion of data. Interesting data are then analyzed using API from [Palindrome Analyzer](http://dx.doi.org/10.1016/j.bbrc.2016.09.015). DNA Analyser is a web-based server for nucleotide sequence analysis. It has been developed thanks to cooperation of Department of Informatics, Mendel’s University in Brno and Institute of Biophysics, Academy of Sciences of the Czech Republic. 
 

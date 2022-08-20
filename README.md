@@ -1,7 +1,7 @@
 <h1 align='center'> Palindrome tree</h1>
 <br />
 <div align="center">
-    <a href="https://pypi.org/project/dna-analyser-ibp/">
+    <a href="https://pypi.org/project/palindrome-tree/">
     <img src="https://img.shields.io/badge/Version 1.3.1-green?style=for-the-badge" alt='package_version'/>
     </a>
     <img src="https://img.shields.io/badge/Python 3.6+-00599C?style=for-the-badge&logo=python&logoColor=white" alt='python_version'/>
